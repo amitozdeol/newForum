@@ -53,7 +53,7 @@ class FrontendController extends Controller
         
         $forum = Forum::find($id);
 
-        $forumDiscussionQuery = $forum->discussions()
+        $forumDiscussions = DB::table('forums')->leftJoin('discussions','discussions.forum_id','=','forums.id')
         ->leftJoin('users', 'users.id', '=', 'discussions.user_id')
         ->leftJoin('discussion_replies', 'discussion_replies.discussion_id', '=', 'discussions.id')
         ->selectRaw(
@@ -61,35 +61,18 @@ class FrontendController extends Controller
             users.name as user_name,
             discussion_replies.id as reply_id,
             count(discussion_replies.discussion_id) as discussion_replies_count')
-            ->groupBy('discussions.id');
-
-        if($timePeriod == 'day'){
-            $forumDiscussionQuery->where('discussions.created_at','>=',Carbon::today());
-        }elseif($timePeriod == 'week'){           
-            $forumDiscussionQuery->whereBetween('discussions.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-        }elseif($timePeriod == 'month'){
-            $forumDiscussionQuery->whereMonth('discussions.created_at', date('m'))
-            ->whereYear('discussions.created_at', date('Y'));
-        }elseif($timePeriod == 'year'){
-            $forumDiscussionQuery->whereYear('discussions.created_at', date('Y'));
-        }
-        elseif($timePeriod == 'lastYear'){
-            $forumDiscussionQuery->whereYear('discussions.created_at', date('Y', strtotime('-1 year')));
-        }
-
-        if($postType == 'post_time'){
-            $forumDiscussionQuery->orderBy('discussions.created_at',$postSortBy);
-        }else if($postType == 'replies'){
-            $forumDiscussionQuery->orderBy('discussion_replies_count',$postSortBy); 
-        }else if($postType == 'subject'){
-            $forumDiscussionQuery->orderBy('discussions.title',$postSortBy);
-        }else if($postType == 'views'){
-            $forumDiscussionQuery->orderBy('discussions.views',$postSortBy);
-        }else{
-            $forumDiscussionQuery->orderBy('users.name',$postSortBy);
-        }
-        
-        $forumDiscussions = $forumDiscussionQuery->paginate(30)->onEachSide(1);
+            ->groupBy('discussions.id')
+            ->when($timePeriod == 'day', function ($query) {$query->where('discussions.created_at','>=',Carbon::today());})
+            ->when($timePeriod == 'week', function ($query) {$query->whereBetween('discussions.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);})
+            ->when($timePeriod == 'month', function ($query){$query->whereMonth('discussions.created_at', date('m'))->whereYear('discussions.created_at', date('Y'));})
+            ->when($timePeriod == 'year', function ($query) {$query->whereYear('discussions.created_at', date('Y'));})
+            ->when($timePeriod == 'lastYear', function ($query) {$query->whereYear('discussions.created_at', date('Y', strtotime('-1 year')));})
+            ->when($postType == 'author', function ($query) use($postSortBy){$query->orderBy('users.name',$postSortBy);})
+            ->when($postType == 'post_time', function ($query) use($postSortBy){$query->orderBy('discussions.created_at',$postSortBy);})
+            ->when($postType == 'replies', function ($query) use($postSortBy){$query->orderBy('discussion_replies_count',$postSortBy);})
+            ->when($postType == 'subject', function ($query) use($postSortBy){$query->orderBy('discussions.title',$postSortBy);})
+            ->when($postType == 'views', function ($query) use($postSortBy){$query->orderBy('discussions.views',$postSortBy);})
+            ->paginate(30)->onEachSide(1);
         
         return view('client.forum-overview', compact('forum','forumDiscussions'));
     }

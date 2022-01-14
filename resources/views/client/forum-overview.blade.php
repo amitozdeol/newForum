@@ -34,7 +34,7 @@
                     <tr>
                     <td>
                       <h3 class="h6">
-                        <span class="badge badge-primary">{{$topic->replies->count()}} replies</span>
+                        <span class="badge badge-primary">{{$topic->discussion_replies_count}} replies</span>
                         <a href="{{route('topic', $topic->id)}}" class=""
                           >{{$topic->title}}.</a
                         >
@@ -47,11 +47,11 @@
                       </div> -->
                     </td>
                     <td>
-                      <div>by <a href="#">{{$topic->user->name}}</a></div>
+                      <div>by <a href="#">{{$topic->user_name}}</a></div>
                       <div>{{$topic->created_at}}</div>
                     </td>
                     <td>
-                      <div> {{$topic->replies->count()}} Replies</div>
+                      <div> {{$topic->discussion_replies_count}} Replies</div>
                       <div>{{$topic->views}} Views</div>
                     </td>
 
@@ -81,11 +81,11 @@
               class="form-control form-control-sm"
             >
               <option value="all">All posts</option>
-              <option value="day">1 day</option>
-              <option value="week">1 week</option>
-              <option value="month">1 month</option>
-              <option value="year">1 year</option>
-              <option value="lastYear">Last year</option>
+              <option {{ (request()->time_period == "day") ? 'selected':''}} value="day">1 day</option>
+              <option {{ (request()->time_period == "week") ? 'selected':''}} value="week">1 week</option>
+              <option {{ (request()->time_period == "month") ? 'selected':''}} value="month">1 month</option>
+              <option {{ (request()->time_period == "year") ? 'selected':''}} value="year">1 year</option>
+              <option {{ (request()->time_period == "lastYear") ? 'selected':''}} value="lastYear">Last year</option>
             </select>
           </div>
 
@@ -97,11 +97,11 @@
               id=""
               class="form-control form-control-sm"
             >
-              <option value="author">Author</option>
-              <option value="post_time">Post time</option>
-              <option value="replies">Replies</option>
-              <option value="subject">Subject</option>
-              <option value="views">Views</option>
+              <option {{ (request()->post_type == "author") ? 'selected':''}} value="author">Author</option>
+              <option {{ (request()->post_type == "post_time") ? 'selected':''}} value="post_time">Post time</option>
+              <option {{ (request()->post_type == "replies") ? 'selected':''}} value="replies">Replies</option>
+              <option {{ (request()->post_type == "subject") ? 'selected':''}}  value="subject">Subject</option>
+              <option {{ (request()->post_type == "views") ? 'selected':''}} value="views">Views</option>
             </select>
           </div>
 
@@ -113,8 +113,8 @@
               id=""
               class="form-control form-control-sm"
             >
-              <option value="desc">Desending</option>
-              <option value="asc">Ascending</option>
+              <option {{ (request()->post_sort_by == "desc") ? 'selected':''}} value="desc">Desending</option>
+              <option {{ (request()->post_sort_by == "asc") ? 'selected':''}} value="asc">Ascending</option>
             </select>
           </div>
           <button type="submit" class="btn btn-sm btn-primary">Sort</button>
